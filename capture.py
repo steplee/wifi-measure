@@ -5,48 +5,7 @@ import numpy as np
 import cv2
 from matplotlib import pyplot as plt
 
-def do_capture(dt=.05):
-    samples = []
-    do_continue = True
-    start_time = time.time()
-    while do_continue:
-        i,o,e = select.select([sys.stdin],[],[],.00001)
-        for ev in i:
-            if ev == sys.stdin:
-                do_continue = False
         
-        s = subprocess.getoutput('/bin/cat /proc/net/wireless')
-        rssi = int(s.split('\n')[2].split()[2].replace('.',''))
-
-        samp_time = time.time() - start_time
-
-        samples.append( (samp_time,rssi) )
-        time.sleep(dt)
-
-    return np.array(samples)
-
-def capture_cam_frames(dt=.1):
-    io = os.dup(sys.stdin.fileno())
-    cap = cv2.VideoCapture(0)
-    frames = []
-
-    try:
-        while True:
-            good,frame = cap.read()
-            if good:
-                frames.append(frame)
-            else:
-                print("Failed to read %d"%(len(frames)))
-
-            time.sleep(dt)
-    except KeyboardInterrupt:
-        pass
-
-
-    for i in range(len(frames)):
-        cv2.imwrite('./images/frame_%06d.png'%i, frames[i])
-        
-
 def capture_both(dt=.1):
     io = os.dup(sys.stdin.fileno())
     cap = cv2.VideoCapture(0)
@@ -116,15 +75,9 @@ def do_plot_samples(samps):
     plt.show()
 
 
-if 'rssi' in sys.argv:
-    samps = do_capture()
-    do_plot_samples(samps)
-elif 'video' in sys.argv:
-    capture_cam_frames()
-elif 'both' in sys.argv:
+if 'capture' in sys.argv:
     capture_both()
 elif 'playback' in sys.argv:
     do_playback(True)
-
 else:
-    print("Usage:\n\t./capture rssi \n OR\n\t./capture videogn OR\n\t./capture both")
+    print("Usage:\n\t./capture capture\n OR\n\t./capture playback")
